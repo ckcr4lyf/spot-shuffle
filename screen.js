@@ -1,6 +1,5 @@
 import blessed from 'blessed';
 import fs from 'fs';
-import d from './allShuffle.json' assert { type: 'json' };
 import { addItems, getAllSongs, makePlaylist} from './api.js'
 import dotenv from 'dotenv';
 
@@ -14,9 +13,7 @@ const getNiceShort = (ms) => {
     return new Date(ms).toISOString().slice(14, 19);
 }
 
-
 const updateList = () => {
-
     let total_duration = 0;
     const elements = [];
     for (let i = 0; i < state.length; i++){
@@ -24,14 +21,7 @@ const updateList = () => {
         total_duration += state[i].ms;
         list.setItem(i, newEntry)
     }
-
-    // for (let song of state){
-    //     elements.push(`[${getNice(total_duration)}] ${song.name} (${getNiceShort(song.duration)})`)
-    // }    
-
 }
-
-// let state = [ ...d ];
 
 const screen = blessed.screen({
     smartCSR: true
@@ -65,13 +55,11 @@ list.on('action', (x, y) => {
 })
 
 list.on('select item', (x, index) => {
-    // console.error(index);
     globalCurrent = index;
 })
 
 list.key('left', () => {
     const current = globalCurrent;
-    // console.error('got left', current);
 
     if (current === 0){
         return;
@@ -89,7 +77,6 @@ list.key('left', () => {
 
 list.key('right', () => {
     const current = globalCurrent;
-    // console.error('got right', current);
 
     if (current === state.length){
         return;
@@ -120,21 +107,8 @@ list.key('end', (x, y) => {
     // Fix state
     const deleted = state.splice(current, 1);
     state.push(...deleted);
-    // const scroll = list.getScroll();
-    // console.error(`Currently selected: ${current}. Scroll: ${scroll}. Other ${list.top} , ${list.bottom}`);
-    // const deleted = state.splice(current, 1);
-    // console.error(deleted);
-    // state.push(...deleted);
-    // // list.clearItems();
-    // list.setItems(state.map(el => el.name));
-
-    // // list.select(current);
-
-    // list.resetScroll();
-    // list.select(0);
-    // list.move(current + 10);
-    // list.select(current);
     list.down();
+
     updateList();
     screen.render();
 })
@@ -151,6 +125,3 @@ screen.key(['escape', 'q', 'C-c'], function(ch, key) {
 });
 
 screen.render();
-
-// Run with
-// node screen.js 2>/tmp/log.log
