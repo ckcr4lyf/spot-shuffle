@@ -10,13 +10,34 @@ const getNice = (ms) => {
     return new Date(ms).toISOString().slice(11, 19);
 }
 
-let state = await getAllSongs(process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER)
+const getNiceShort = (ms) => {
+    return new Date(ms).toISOString().slice(14, 19);
+}
+
+
+const updateList = () => {
+
+    let total_duration = 0;
+    const elements = [];
+    for (let i = 0; i < state.length; i++){
+        const newEntry = `[${getNice(total_duration)}] ${state[i].name} (${getNiceShort(state[i].ms)})`
+        total_duration += state[i].ms;
+        list.setItem(i, newEntry)
+    }
+
+    // for (let song of state){
+    //     elements.push(`[${getNice(total_duration)}] ${song.name} (${getNiceShort(song.duration)})`)
+    // }    
+
+}
 
 // let state = [ ...d ];
 
 const screen = blessed.screen({
     smartCSR: true
 });
+
+let state = await getAllSongs(process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER)
 
 const list = blessed.list({
     parent: screen,
@@ -33,6 +54,9 @@ const list = blessed.list({
     },
     items: state.map(el => el.name),
 });
+
+
+updateList();
 
 let globalCurrent = 0;
 
@@ -59,6 +83,7 @@ list.key('left', () => {
     const deleted = state.splice(current, 1);
     state.splice(current - 1, 0, ...deleted);
     list.up(1);
+    updateList();
     screen.render();
 })
 
@@ -73,7 +98,6 @@ list.key('right', () => {
     list.spliceItem(current, 1);
     list.insertItem(current+1, state[current].name);
 
-    list.setItem(0, "XD");
 
     // Fix state
     const deleted = state.splice(current, 1);
@@ -84,7 +108,7 @@ list.key('right', () => {
     } else {
         list.down(2);
     }
-    
+    updateList();
     screen.render();
 })
 
@@ -111,6 +135,7 @@ list.key('end', (x, y) => {
     // list.move(current + 10);
     // list.select(current);
     list.down();
+    updateList();
     screen.render();
 })
 

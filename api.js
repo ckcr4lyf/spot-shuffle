@@ -20,7 +20,7 @@ export const getAllSongs = async (playlistId, authHeader) => {
         const summ = rsp.items.map(item => {
             return {
                 uri: item.track.uri,
-                name: `(${getNice(item.track.duration_ms)}) ${item.track.artists[0].name} - ${item.track.name}`,
+                name: `${item.track.artists[0].name} - ${item.track.name}`,
                 ms: item.track.duration_ms
             }
         })
