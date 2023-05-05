@@ -1,5 +1,9 @@
 import got from 'got';
 
+const getNice = (ms) => {
+    return new Date(ms).toISOString().slice(11, 19);
+}
+
 export const getAllSongs = async (playlistId, authHeader) => {
     const songs = [];
     let offset = 0;
@@ -16,7 +20,8 @@ export const getAllSongs = async (playlistId, authHeader) => {
         const summ = rsp.items.map(item => {
             return {
                 uri: item.track.uri,
-                name: `${item.track.artists[0].name} - ${item.track.name}`,
+                name: `(${getNice(item.track.duration_ms)}) ${item.track.artists[0].name} - ${item.track.name}`,
+                ms: item.track.duration_ms
             }
         })
 

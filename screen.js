@@ -1,13 +1,18 @@
 import blessed from 'blessed';
 import fs from 'fs';
 import d from './allShuffle.json' assert { type: 'json' };
+import { addItems, getAllSongs, makePlaylist} from './api.js'
+import dotenv from 'dotenv';
 
+dotenv.config();
 
 const getNice = (ms) => {
     return new Date(ms).toISOString().slice(11, 19);
 }
 
-let state = [ ...d ];
+let state = await getAllSongs(process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER)
+
+// let state = [ ...d ];
 
 const screen = blessed.screen({
     smartCSR: true
@@ -67,6 +72,8 @@ list.key('right', () => {
 
     list.spliceItem(current, 1);
     list.insertItem(current+1, state[current].name);
+
+    list.setItem(0, "XD");
 
     // Fix state
     const deleted = state.splice(current, 1);
