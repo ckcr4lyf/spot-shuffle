@@ -17,7 +17,7 @@ const list = blessed.list({
 
     style: {
         selected: {
-            bg: 'red'
+            bg: 'blue'
         }
     },
     items: state.map(el => el.name),
@@ -32,6 +32,23 @@ list.on('action', (x, y) => {
 list.on('select item', (x, index) => {
     // console.error(index);
     globalCurrent = index;
+})
+
+list.key('left', () => {
+    console.error('got left');
+})
+
+list.key('right', () => {
+    const current = globalCurrent;
+    console.error('got right', current);
+    list.spliceItem(current, 1);
+    list.insertItem(current+1, state[current].name);
+
+    // Fix state
+    const deleted = state.splice(current, 1);
+    state.splice(current + 1, 0, ...deleted);
+    list.down(2);
+    screen.render();
 })
 
 list.key('end', (x, y) => {
@@ -57,7 +74,6 @@ list.key('end', (x, y) => {
     // list.move(current + 10);
     // list.select(current);
     list.down();
-    console.error(list.height, list.iheight);
     screen.render();
 })
 

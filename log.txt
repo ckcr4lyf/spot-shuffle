@@ -1,0 +1,39 @@
+(node:239575) ExperimentalWarning: Importing JSON modules is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+Error on alacritty.plab_norm:
+"%t;7%;%?%p4%t;5%;%?%p7%t;8%;m"
+
+var v,
+ stack = [],
+ out = [];
+) {out.push(";
+7")};
+if ((stack.push(v = params[3]),
+ v)) {out.push(";
+5")};
+if ((stack.push(v = params[6]),
+ v)) {out.push(";
+8")}out.push("m");
+return out.join("");
+
+got right 13
+got right 14
+got right 15
+got right 16
+got right 17
+got right 18
+got right 19
+got right 20
+got right 21
+got right 22
+got right 23
+got right 24
+got right 22
+got right 23
+got right 24
+got right 33
+got right 34
+got right 30
+got right 28
+got left
