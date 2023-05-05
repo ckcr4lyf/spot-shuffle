@@ -1,6 +1,6 @@
 import blessed from 'blessed';
 import fs from 'fs';
-import { addItems, getAllSongs, makePlaylist} from './api.js'
+import { addItems, deleteItems, getAllSongs, makePlaylist} from './api.js'
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -113,9 +113,13 @@ list.key('end', (x, y) => {
     screen.render();
 })
 
-list.key('s', () => {
+list.key('s', async () => {
     const filename = `${Date.now()}_ordered.json`
     fs.writeFileSync(filename, JSON.stringify(state, null, 2));
+
+    await deleteItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
+    await addItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
+    screen.render();
 })
 
 screen.title = 'Spot Shuffle';
