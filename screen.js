@@ -35,19 +35,43 @@ list.on('select item', (x, index) => {
 })
 
 list.key('left', () => {
-    console.error('got left');
+    const current = globalCurrent;
+    console.error('got left', current);
+
+    if (current === 0){
+        return;
+    }
+    list.spliceItem(current, 1);
+    list.insertItem(current-1, state[current].name);
+
+    // Fix state
+    const deleted = state.splice(current, 1);
+    state.splice(current - 1, 0, ...deleted);
+    list.up(1);
+    screen.render();
 })
 
 list.key('right', () => {
     const current = globalCurrent;
     console.error('got right', current);
+
+    if (current === state.length){
+        return;
+    }
+
     list.spliceItem(current, 1);
     list.insertItem(current+1, state[current].name);
 
     // Fix state
     const deleted = state.splice(current, 1);
     state.splice(current + 1, 0, ...deleted);
-    list.down(2);
+
+    if (current === 0){
+        list.down(1);
+    } else {
+        list.down(2);
+    }
+    
     screen.render();
 })
 
