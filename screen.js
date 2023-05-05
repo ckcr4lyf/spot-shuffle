@@ -1,5 +1,11 @@
 import blessed from 'blessed';
+import fs from 'fs';
 import d from './allShuffle.json' assert { type: 'json' };
+
+
+const getNice = (ms) => {
+    return new Date(ms).toISOString().slice(11, 19);
+}
 
 let state = [ ...d ];
 
@@ -36,7 +42,7 @@ list.on('select item', (x, index) => {
 
 list.key('left', () => {
     const current = globalCurrent;
-    console.error('got left', current);
+    // console.error('got left', current);
 
     if (current === 0){
         return;
@@ -53,7 +59,7 @@ list.key('left', () => {
 
 list.key('right', () => {
     const current = globalCurrent;
-    console.error('got right', current);
+    // console.error('got right', current);
 
     if (current === state.length){
         return;
@@ -99,6 +105,11 @@ list.key('end', (x, y) => {
     // list.select(current);
     list.down();
     screen.render();
+})
+
+list.key('s', () => {
+    const filename = `${Date.now()}_ordered.json`
+    fs.writeFileSync(filename, JSON.stringify(state, null, 2));
 })
 
 screen.title = 'Spot Shuffle';
