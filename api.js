@@ -1,5 +1,9 @@
 import got from 'got';
 
+const getNice = (ms) => {
+    return new Date(ms).toISOString().slice(11, 19);
+}
+
 export const getAllSongs = async (playlistId, authHeader) => {
     const songs = [];
     let offset = 0;
@@ -17,12 +21,13 @@ export const getAllSongs = async (playlistId, authHeader) => {
             return {
                 uri: item.track.uri,
                 name: `${item.track.artists[0].name} - ${item.track.name}`,
+                ms: item.track.duration_ms
             }
         })
 
         songs.push(...summ);
         if (rsp.items.length === 0){
-            console.log('end');
+            // console.log('end');
             return songs;
         }
 
@@ -44,6 +49,29 @@ export const makePlaylist = (userId, playlistName, authHeader) => {
     });
 }
 
+export const deleteItems = async (uris, playlistId, authHeader) => {
+    let urisToAdd = uris.splice(0, 100);
+
+    while (true){
+        await got.delete(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+            headers: {
+            'Authorization': authHeader
+            },
+            json: {
+                uris: urisToAdd,
+            }
+        });
+
+        if (uris.length === 0){
+            // console.log('done');
+            return;
+        }
+
+        // console.log(`${uris.length} more to go`);
+        urisToAdd = uris.splice(0, 100);
+    }
+}
+
 export const addItems = async (uris, playlistId, authHeader) => {
     let urisToAdd = uris.splice(0, 100);
 
@@ -58,11 +86,11 @@ export const addItems = async (uris, playlistId, authHeader) => {
         });
 
         if (uris.length === 0){
-            console.log('done');
+            // console.log('done');
             return;
         }
 
-        console.log(`${uris.length} more to go`);
+        // console.log(`${uris.length} more to go`);
         urisToAdd = uris.splice(0, 100);
     }
 }
