@@ -4,7 +4,7 @@ const getNice = (ms) => {
     return new Date(ms).toISOString().slice(11, 19);
 }
 
-export const exchangeCode = async (code, codeHash) => {
+export const exchangeCode = async (code, codeVerifier) => {
     const url = `https://accounts.spotify.com/api/token`;
 
     const r = await got.post(url, {
@@ -13,8 +13,9 @@ export const exchangeCode = async (code, codeHash) => {
             code: code,
             redirect_uri: 'http://localhost:13337',
             client_id: '45d547b6b97c46ce9cf3c0c5f4bcaa55',
-            code_verifier: codeHash,
-        }
+            code_verifier: codeVerifier,
+        },
+        throwHttpErrors: false,
     });
 
     const rsp = JSON.parse(r.body);

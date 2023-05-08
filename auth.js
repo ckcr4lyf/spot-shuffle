@@ -4,12 +4,14 @@
 
 import http from 'http';
 import crypto from 'crypto';
+import { exchangeCode } from './api.js';
 
 
-const code = crypto.randomBytes(32).toString('hex');
-const codeHash = crypto.createHash('sha256').update(code).digest('base64');
+const codeVerifier = crypto.randomBytes(32).toString('hex');
+console.log(codeVerifier);
+const codeHash = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
 
-const generateAuthUri = () => {
+export const generateAuthUri = () => {
     const client_id = '45d547b6b97c46ce9cf3c0c5f4bcaa55';
     const redirect_uri = 'http://localhost:13337';
     
@@ -28,13 +30,18 @@ const generateAuthUri = () => {
 
 console.log(generateAuthUri());
 
-const waitForAccessToken = async () => {
+export const waitForAccessToken = async () => {
     return new Promise((resolve, reject) => {
-        const server = http.createServer((req, res) => {
+        const server = http.createServer(async (req, res) => {
             console.log(req.url);
-            const code = req.url.substring(req.url.indexOf('#')).split('&')[0].split('=')[1]
+            const code = req.url.substring(req.url.indexOf('#')).split('&')[0].split('=')[1];
+
+            console.log(code, codeVerifier);
+
+            const accessToken = await exchangeCode(code, codeVerifier)
             res.writeHead(200, { 'Content-Type': 'text/plain'});
             res.write('success! you can close this window now.');
+            res.end();
             resolve(accessToken);    
         });
 
