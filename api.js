@@ -19,7 +19,6 @@ export const exchangeCode = async (code, codeVerifier) => {
     });
 
     const rsp = JSON.parse(r.body);
-    console.log(rsp);
     return rsp.access_token;
 }
 
