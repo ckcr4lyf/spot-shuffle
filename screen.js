@@ -108,6 +108,20 @@ list.key('right', () => {
     screen.render();
 })
 
+list.key('home', () => {
+    const current = globalCurrent;
+    list.spliceItem(current, 1);
+    list.insertItem(0, state[current].name);
+
+    // Fix state
+    const deleted = state.splice(current, 1);
+    state.splice(0, 0, ...deleted);
+    list.down();
+
+    updateList();
+    screen.render();
+})
+
 list.key('end', (x, y) => {
     const current = globalCurrent;
     list.spliceItem(current, 1);
