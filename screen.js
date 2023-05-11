@@ -84,6 +84,25 @@ list.key('left', () => {
     screen.render();
 })
 
+list.key('pageup', () => {
+    const current = globalCurrent;
+
+    if (current <= 10){
+        return;
+    }
+
+    list.spliceItem(current, 1);
+    list.insertItem(current-10, state[current].name);
+
+    // Fix state
+    const deleted = state.splice(current, 1);
+    state.splice(current - 10, 0, ...deleted);
+    // list.up(1);
+    list.down(1);
+    updateList();
+    screen.render();
+})
+
 list.key('right', () => {
     const current = globalCurrent;
 
@@ -104,6 +123,24 @@ list.key('right', () => {
     } else {
         list.down(2);
     }
+    updateList();
+    screen.render();
+})
+
+list.key('pagedown', () => {
+    const current = globalCurrent;
+
+    if (current >= state.length-10){
+        return;
+    }
+
+    list.spliceItem(current, 1);
+    list.insertItem(current+10, state[current].name);
+
+    // Fix state
+    const deleted = state.splice(current, 1);
+    state.splice(current + 10, 0, ...deleted);
+    list.down(1);
     updateList();
     screen.render();
 })
