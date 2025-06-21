@@ -4,14 +4,10 @@ import { addItems, deleteItems, getAllSongs, makePlaylist} from './api.js'
 import { generateAuthUri, waitForAccessToken } from './auth.js';
 import dotenv from 'dotenv';
 
-const { codeVerifier, url } = generateAuthUri();
-
-console.log(`Please visit the following URL to connect this app to your spotify account: ${url}`);
-
-const accessToken = await waitForAccessToken(codeVerifier);
-
 dotenv.config();
-
+const { codeVerifier, url } = generateAuthUri();
+console.log(`Please visit the following URL to connect this app to your spotify account: ${url}`);
+const accessToken = await waitForAccessToken(codeVerifier);
 process.env.AUTH_HEADER = `Bearer ${accessToken}`;
 
 const getNice = (ms) => {
@@ -24,7 +20,6 @@ const getNiceShort = (ms) => {
 
 const updateList = () => {
     let total_duration = 0;
-    const elements = [];
     for (let i = 0; i < state.length; i++){
         const newEntry = `[${getNice(total_duration)}] ${state[i].name} (${getNiceShort(state[i].ms)})`
         total_duration += state[i].ms;
@@ -177,7 +172,9 @@ list.key('s', async () => {
     const filename = `${Date.now()}_ordered.json`
     fs.writeFileSync(filename, JSON.stringify(state, null, 2));
 
+    console.error(`deleting`);
     await deleteItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
+    console.error(`adding`);
     await addItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
     screen.render();
 })

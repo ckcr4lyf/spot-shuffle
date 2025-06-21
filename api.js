@@ -71,13 +71,19 @@ export const deleteItems = async (uris, playlistId, authHeader) => {
     let urisToAdd = uris.splice(0, 100);
 
     while (true){
+
+        const tracks = urisToAdd.map(uri => {
+            return {
+                uri: uri,
+            }
+        })
         await got.delete(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
             headers: {
             'Authorization': authHeader
             },
             json: {
-                uris: urisToAdd,
-            }
+                tracks: tracks,
+            },
         });
 
         if (uris.length === 0){
