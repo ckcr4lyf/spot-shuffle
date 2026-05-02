@@ -3,12 +3,15 @@ import fs from 'fs';
 import { addItems, deleteItems, getAllSongs, makePlaylist} from './api.js'
 import { generateAuthUri, waitForAccessToken } from './auth.js';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 const { codeVerifier, url } = generateAuthUri();
 console.log(`Please visit the following URL to connect this app to your spotify account: ${url}`);
 const accessToken = await waitForAccessToken(codeVerifier);
 process.env.AUTH_HEADER = `Bearer ${accessToken}`;
+
+let MARKED_HOME = 0;
 
 const getNice = (ms) => {
     return new Date(ms).toISOString().slice(11, 19);
@@ -21,7 +24,14 @@ const getNiceShort = (ms) => {
 const updateList = () => {
     let total_duration = 0;
     for (let i = 0; i < state.length; i++){
-        const newEntry = `[${getNice(total_duration)}] ${state[i].name} (${getNiceShort(state[i].ms)})`
+
+        const base = `[${getNice(total_duration)}] ${state[i].name} (${getNiceShort(state[i].ms)})`
+        let newEntry = ``;
+        if (i === MARKED_HOME){
+            newEntry = `===========> ${base}`;
+        } else {
+            newEntry = base;
+        }
         total_duration += state[i].ms;
         list.setItem(i, newEntry)
     }
@@ -140,14 +150,21 @@ list.key('pagedown', () => {
     screen.render();
 })
 
+list.key('m', () => {
+    const current = globalCurrent;
+    MARKED_HOME = current;
+    updateList();
+    screen.render();
+})
+
 list.key('home', () => {
     const current = globalCurrent;
     list.spliceItem(current, 1);
-    list.insertItem(0, state[current].name);
+    list.insertItem(MARKED_HOME + 1, state[current].name);
 
     // Fix state
     const deleted = state.splice(current, 1);
-    state.splice(0, 0, ...deleted);
+    state.splice(MARKED_HOME + 1, 0, ...deleted);
     list.down();
 
     updateList();
@@ -172,10 +189,24 @@ list.key('s', async () => {
     const filename = `${Date.now()}_ordered.json`
     fs.writeFileSync(filename, JSON.stringify(state, null, 2));
 
-    console.error(`deleting`);
-    await deleteItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
-    console.error(`adding`);
-    await addItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
+    const newPlaylistName = crypto.randomBytes(10).toString('hex');
+    const newPlaylist = await makePlaylist(process.env.USER_ID, newPlaylistName, process.env.AUTH_HEADER);
+
+    const allShuffle = state.map(s => s.uri);
+    const uniq = [];
+    for (let el of allShuffle) {
+        if (uniq.indexOf(el) !== -1){
+            continue;
+        }
+
+        uniq.push(el);
+    }
+
+    await addItems(uniq, JSON.parse(newPlaylist.body).id, process.env.AUTH_HEADER);
+    // console.error(`deleting`);
+    // await deleteItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
+    // console.error(`adding`);
+    // await addItems(state.map(s => s.uri), process.env.PLAYLIST_REORDER, process.env.AUTH_HEADER);
     screen.render();
 })
 
