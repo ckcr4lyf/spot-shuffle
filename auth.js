@@ -4,13 +4,16 @@
 
 import http from 'http';
 import crypto from 'crypto';
-import { exchangeCode } from './api.js';
+import fs from 'fs';
+import { exchangeCode, refreshAccessToken } from './api.js';
+
+const TOKEN_FILE = '.spotify_token.json';
 
 export const generateAuthUri = () => {
     const codeVerifier = crypto.randomBytes(32).toString('hex');
     const codeHash = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     const client_id = '45d547b6b97c46ce9cf3c0c5f4bcaa55';
-    const redirect_uri = 'http://localhost:13337';
+    const redirect_uri = 'http://127.0.0.1:13337';
     
     const scope = 'playlist-modify-public playlist-modify-private playlist-read-private';
     
@@ -30,13 +33,37 @@ export const waitForAccessToken = async (codeVerifier) => {
     return new Promise((resolve, reject) => {
         const server = http.createServer(async (req, res) => {
             const code = req.url.substring(req.url.indexOf('?')).split('&')[0].split('=')[1];
-            const accessToken = await exchangeCode(code, codeVerifier)
+            const tokenData = await exchangeCode(code, codeVerifier)
             res.writeHead(200, { 'Content-Type': 'text/plain'});
             res.write('success! you can close this window now.');
             res.end();
-            resolve(accessToken);    
+            resolve(tokenData);    
         });
 
         server.listen(13337, '127.0.0.1');      
     })
+}
+
+export const saveToken = (tokenData) => {
+    const data = {
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken,
+        expiresAt: Date.now() + tokenData.expiresIn * 1000,
+    };
+    fs.writeFileSync(TOKEN_FILE, JSON.stringify(data, null, 2));
+}
+
+export const loadToken = () => {
+    try {
+        const raw = fs.readFileSync(TOKEN_FILE, 'utf8');
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+}
+
+export const clearToken = () => {
+    try {
+        fs.unlinkSync(TOKEN_FILE);
+    } catch {}
 }

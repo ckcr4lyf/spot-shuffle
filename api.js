@@ -11,7 +11,7 @@ export const exchangeCode = async (code, codeVerifier) => {
         form: {
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: 'http://localhost:13337',
+            redirect_uri: 'http://127.0.0.1:13337',
             client_id: '45d547b6b97c46ce9cf3c0c5f4bcaa55',
             code_verifier: codeVerifier,
         },
@@ -19,7 +19,61 @@ export const exchangeCode = async (code, codeVerifier) => {
     });
 
     const rsp = JSON.parse(r.body);
-    return rsp.access_token;
+    return {
+        accessToken: rsp.access_token,
+        refreshToken: rsp.refresh_token || null,
+        expiresIn: rsp.expires_in,
+    };
+}
+
+export const refreshAccessToken = async (refreshToken) => {
+    const url = `https://accounts.spotify.com/api/token`;
+
+    const r = await got.post(url, {
+        form: {
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+            client_id: '45d547b6b97c46ce9cf3c0c5f4bcaa55',
+        },
+        throwHttpErrors: false,
+    });
+
+    const rsp = JSON.parse(r.body);
+    return {
+        accessToken: rsp.access_token,
+        expiresIn: rsp.expires_in,
+    };
+}
+
+export const getUserPlaylists = async (authHeader) => {
+    const playlists = [];
+    let offset = 0;
+
+    while (true) {
+        const url = `https://api.spotify.com/v1/me/playlists?offset=${offset}&limit=50`;
+        const r = await got.get(url, {
+            headers: {
+                'Authorization': authHeader
+            }
+        });
+
+        const rsp = JSON.parse(r.body);
+
+        for (const item of rsp.items) {
+            playlists.push({
+                id: item.id,
+                name: item.name,
+                trackCount: item.tracks.total,
+                owner: item.owner.display_name,
+            });
+        }
+
+        if (rsp.items.length === 0 || rsp.next === null) {
+            return playlists;
+        }
+
+        offset += 50;
+    }
 }
 
 export const getAllSongs = async (playlistId, authHeader) => {
@@ -71,13 +125,19 @@ export const deleteItems = async (uris, playlistId, authHeader) => {
     let urisToAdd = uris.splice(0, 100);
 
     while (true){
+
+        const tracks = urisToAdd.map(uri => {
+            return {
+                uri: uri,
+            }
+        })
         await got.delete(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
             headers: {
             'Authorization': authHeader
             },
             json: {
-                uris: urisToAdd,
-            }
+                tracks: tracks,
+            },
         });
 
         if (uris.length === 0){
